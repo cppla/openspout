@@ -661,7 +661,12 @@ final class ReaderTest extends TestCase
 
         $startTime = microtime(true);
 
-        $this->getAllRowsForFile('attack_quadratic_blowup.xlsx');
+        try {
+            $this->getAllRowsForFile('attack_quadratic_blowup.xlsx');
+        } catch (IOException $exception) {
+            // Newer libxml safely rejects entity amplification instead of returning empty content.
+            self::assertStringContainsString('amplification', $exception->getMessage());
+        }
 
         $duration = microtime(true) - $startTime;
         self::assertLessThan(10, $duration, 'Entities should not be expanded and therefore take more than 10 seconds to be parsed.');

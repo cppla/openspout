@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Reader\Exception\IteratorNotRewindableException;
+use OpenSpout\Reader\Exception\XMLProcessingException;
 use OpenSpout\TestUsingResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -278,7 +279,14 @@ final class ReaderTest extends TestCase
         $startTime = microtime(true);
 
         $fileName = 'attack_quadratic_blowup.ods';
-        $allRows = $this->getAllRowsForFile($fileName);
+
+        try {
+            $allRows = $this->getAllRowsForFile($fileName);
+        } catch (XMLProcessingException $exception) {
+            // Newer libxml safely rejects entity amplification instead of returning empty content.
+            self::assertStringContainsString('amplification', $exception->getMessage());
+            $allRows = [];
+        }
 
         self::assertSame('', $allRows[0][0] ?? '', 'Entities should not have been expanded');
 

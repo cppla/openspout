@@ -192,10 +192,10 @@ final class StyleManagerTest extends TestCase
 
     private function getStyleManagerMock(array $styleAttributes = [], array $customNumberFormats = []): Stub&StyleManager
     {
-        $styleManager = self::getStubBuilder(StyleManager::class)
+        $styleManager = $this->getMockBuilder(StyleManager::class)
             ->setConstructorArgs(['/path/to/file.xlsx', uniqid()])
             ->onlyMethods(['getCustomNumberFormats', 'getStylesAttributes'])
-            ->getStub()
+            ->getMock()
         ;
 
         $styleManager->method('getStylesAttributes')->willReturn($styleAttributes);

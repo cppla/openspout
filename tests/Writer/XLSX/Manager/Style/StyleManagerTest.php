@@ -17,10 +17,10 @@ final class StyleManagerTest extends TestCase
     #[DataProvider('provideShouldApplyStyleOnEmptyCellCases')]
     public function testShouldApplyStyleOnEmptyCell(?int $fillId, ?int $borderId, bool $expectedResult): void
     {
-        $styleRegistryMock = self::getStubBuilder(StyleRegistry::class)
+        $styleRegistryMock = $this->getMockBuilder(StyleRegistry::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['getFillIdForStyleId', 'getBorderIdForStyleId'])
-            ->getStub()
+            ->getMock()
         ;
 
         $styleRegistryMock

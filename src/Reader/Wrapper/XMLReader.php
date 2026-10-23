@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenSpout\Reader\Wrapper;
 
+use DOMNode;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Reader\Exception\XMLProcessingException;
 use ZipArchive;
@@ -77,6 +78,20 @@ final class XMLReader extends \XMLReader
         $this->resetXMLInternalErrorsSettingAndThrowIfXMLErrorOccured();
 
         return $wasReadSuccessful;
+    }
+
+    /**
+     * Expand while preserving parser errors before the next read clears them.
+     *
+     * @throws XMLProcessingException
+     */
+    public function expand(?DOMNode $baseNode = null): DOMNode|false
+    {
+        $this->useXMLInternalErrors();
+        $node = parent::expand($baseNode);
+        $this->resetXMLInternalErrorsSettingAndThrowIfXMLErrorOccured();
+
+        return $node;
     }
 
     /**
