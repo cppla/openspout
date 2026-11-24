@@ -1,0 +1,54 @@
+name: PHP 8.6 compatibility
+
+on:
+  push:
+    branches: [main]
+    tags: ['6.*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962
+        with:
+          php-version: '8.6'
+          extensions: dom,fileinfo,mbstring,xmlreader,zip,zlib
+          coverage: none
+          ini-values: zend.assertions=1,error_reporting=-1
+          tools: composer:v2
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - run: composer validate --strict
+      - run: composer check-platform-reqs
+      - name: Syntax
+        run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Upstream tests and parser-error regression
+        run: vendor/bin/phpunit --no-coverage --no-logging
+      - name: Streaming text round trip
+        run: php -d memory_limit=64M tests/Compatibility/streaming.php
+
+  development-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build the PHP 8.6 development image
+        run: docker build --build-arg USER_ID="$(id -u)" --build-arg GROUP_ID="$(id -g)" -t openspout-dev .
+      - name: Check the CLI, spreadsheet extensions and coverage driver
+        run: |
+          docker run --rm openspout-dev composer --version
+          echo '<?php return PHP_VERSION_ID;' > "$RUNNER_TEMP/coverage-probe.php"
+          docker run --rm -v "$RUNNER_TEMP/coverage-probe.php:/tmp/coverage-probe.php:ro" openspout-dev php -d xdebug.mode=coverage -r '
+            if (PHP_VERSION_ID < 80600 || PHP_VERSION_ID >= 80700 || !extension_loaded("zip") || !extension_loaded("mbstring")) {
+                exit(1);
+            }
+            xdebug_start_code_coverage();
+            require "/tmp/coverage-probe.php";
+            exit(empty(xdebug_get_code_coverage()["/tmp/coverage-probe.php"]) ? 1 : 0);
+          '

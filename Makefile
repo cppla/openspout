@@ -33,7 +33,7 @@ coverage/ok: vendor $(SRCS) Makefile phpunit.xml
 	rm -fr tests/resources/generated_*
 	($(DOCKER_PHP_EXEC) php \
 		-d zend.assertions=1 \
-		-d pcov.enabled=1 \
+		-d xdebug.mode=coverage \
 		-d sys_temp_dir="$(realpath .)" \
 		vendor/bin/phpunit \
 		$(PHPUNIT_ARGS) \
@@ -46,13 +46,13 @@ test: coverage/ok
 code-coverage: coverage/ok
 	echo "Base branch: $(BASE_BRANCH)"
 	$(DOCKER_PHP_EXEC) php -d zend.assertions=1 \
-		-d pcov.enabled=1 \
+		-d xdebug.mode=coverage \
 		vendor/bin/infection run \
 		--threads=$(shell nproc) \
 		--git-diff-lines \
 		--git-diff-base=$(BASE_BRANCH) \
 		--skip-initial-tests \
-		--initial-tests-php-options="'-d' 'pcov.enabled=1'" \
+		--initial-tests-php-options="'-d' 'xdebug.mode=coverage'" \
 		--coverage=coverage \
 		--show-mutations \
 		--verbose \

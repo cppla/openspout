@@ -1,18 +1,17 @@
-# OpenSpout PHP 8.3 maintenance fork
+# OpenSpout maintenance fork
 
-This fork retains the `openspout/openspout` Composer package name and preserves the original MIT and Apache-2.0 historical-code license notices.
-It is based on official [v5.12.2](https://github.com/openspout/openspout/releases/tag/v5.12.2),
-commit `0fe609da95101d537411f4a978345f2f882eb935`. Upstream source and copyright notices remain intact.
-The intended maintenance release is `5.12.2-patch.1`, from branch `codex/php83-compat`.
-No upstream tag is moved or replaced. This is a fork release, not an upstream release.
+Version 6.0.0 requires PHP 8.6 or later in the 8.x series. This fork publishes standard semantic versions from `main` and keeps the Composer package name `openspout/openspout`. Version 5.12.2-patch.1 remains available to projects using PHP 8.3–8.5.
 
-## Scope
+The library is based on upstream [v5.12.2](https://github.com/openspout/openspout/releases/tag/v5.12.2), commit `0fe609da95101d537411f4a978345f2f882eb935`. It retains the existing MIT and historical Apache-2.0 notices. The fork detects libxml failures from `XMLReader::expand()` while reading spreadsheets.
 
-- Extend the runtime Composer constraint to PHP 8.3. The upstream release requires PHP 8.4 or newer; this fork maintains and tests the additional runtime.
-- Catch libxml errors from `XMLReader::expand()` before a later read clears them. With libxml 2.13.9, the upstream ODS quadratic-entity fixture otherwise leaves the row iterator returning empty rows indefinitely. Rejecting the malformed document prevents callers that collect rows from exhausting memory. This error handling applies to PHP 8.3 and newer; it is not a PHP 8.3-only syntax backport.
-- Run the suite with maintained PHPUnit 11.5, adapting two test stub builders without changing production behavior.
-- Permit the existing quadratic-entity tests to accept an explicit amplification rejection from newer libxml while retaining their original duration and memory bounds.
-- Add an independent PHP 8.3/8.4/8.5 CI workflow and a bounded-memory streaming text round trip.
+## Install
+
+Configure this repository in the consuming project's root Composer configuration and require the release.
+
+```sh
+composer config repositories.cppla-openspout vcs https://github.com/cppla/openspout
+composer require 'openspout/openspout:^6.0'
+```
 
 ## Checks
 
@@ -34,7 +33,7 @@ for opening untrusted formula-like data in a spreadsheet application.
 
 ## Integration requirements
 
-OpenSpout 5 is not a namespace-only replacement for Box Spout 3 or Dcat EasyExcel.
+OpenSpout is not a namespace-only replacement for Box Spout 3 or Dcat EasyExcel.
 Use a dedicated exporter that retains Dcat's chunked all/current/selected row scopes.
 For card secrets and other untrusted strings, explicitly construct `StringCell` rather than
 using `Cell::fromValue` or `Row::fromValues`, which can infer formulas.
@@ -45,9 +44,4 @@ The included streaming check demonstrates this supported integration pattern.
 
 ## Maintenance
 
-Track upstream changes and advisories; rebase or cherry-pick reviewed fixes and rerun all three
-CI runtimes plus consuming-application export tests before each maintenance tag. Do not remove
-parser-error or streaming checks to accommodate a failed upgrade. Newer upstream minor releases
-may intentionally raise the PHP floor; assess each version before extending this fork.
-The local pre-release check passed on PHP 8.3.36/libxml 2.13.9. The parser-error regression also
-passed on PHP 8.5.12/libxml 2.13.9. Hosted CI and consuming-application testing are separate gates.
+Run the PHP 8.6 suite, the parser regression, the streaming checks, and the consuming application's export tests for releases. The development image includes Xdebug for coverage. Coverage is enabled by the Makefile for PHPUnit and Infection.
